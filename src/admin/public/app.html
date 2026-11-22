@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin · PDF API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: #ffffff;
+      --ink: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --accent: #1d4ed8;
+      --accent-soft: #eff4ff;
+      --ok: #047857;
+      --warn: #b45309;
+      --danger: #b91c1c;
+      --sidebar: #0b1220;
+      --sidebar-text: #cbd5e1;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Instrument Sans", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+    .sidebar {
+      background: var(--sidebar);
+      color: var(--sidebar-text);
+      padding: 22px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 10px 22px;
+      color: white; font-weight: 700; letter-spacing: -0.02em;
+    }
+    .logo .mark {
+      width: 10px; height: 10px; border-radius: 3px;
+      background: linear-gradient(135deg, #3b82f6, #93c5fd);
+    }
+    .nav-btn {
+      appearance: none; border: 0; background: transparent;
+      color: inherit; text-align: left; padding: 11px 12px;
+      border-radius: 10px; cursor: pointer; font: inherit; font-weight: 500;
+    }
+    .nav-btn:hover, .nav-btn.active { background: rgba(255,255,255,0.08); color: white; }
+    .sidebar-foot { margin-top: auto; padding: 12px 10px; font-size: 12px; color: #94a3b8; }
+    .sidebar-foot button {
+      margin-top: 10px; width: 100%; border: 1px solid rgba(148,163,184,0.25);
+      background: transparent; color: #e2e8f0; border-radius: 10px;
+      padding: 10px; cursor: pointer; font: inherit;
+    }
+    .main { padding: 28px 32px 48px; }
+    .topbar { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 24px; }
+    .topbar h1 { margin: 0; font-size: 28px; letter-spacing: -0.03em; }
+    .topbar p { margin: 6px 0 0; color: var(--muted); }
+    .grid { display: grid; gap: 16px; }
+    .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .card {
+      background: var(--panel); border: 1px solid var(--line);
+      border-radius: 16px; padding: 18px;
+    }
+    .stat .label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; }
+    .stat .value { margin-top: 10px; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; }
+    .stat .hint { margin-top: 6px; color: var(--muted); font-size: 13px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .spacer { flex: 1; }
+    button, .btn {
+      border: 0; border-radius: 10px; padding: 10px 14px; font: inherit; font-weight: 600;
+      cursor: pointer; background: var(--accent); color: white;
+    }
+    button.secondary, .btn.secondary { background: white; color: var(--ink); border: 1px solid var(--line); }
+    button.danger { background: #fee2e2; color: var(--danger); }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+    input, select, textarea {
+      width: 100%; border: 1px solid var(--line); border-radius: 10px;
+      padding: 10px 12px; font: inherit; background: white; color: var(--ink);
+    }
+    textarea {
+      font-family: "JetBrains Mono", ui-monospace, monospace;
+      font-size: 12.5px; line-height: 1.5; min-height: 420px; resize: vertical;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 12px 10px; border-bottom: 1px solid var(--line); font-size: 14px; vertical-align: top; }
+    th { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .badge {
+      display: inline-flex; align-items: center; padding: 4px 8px; border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+    }
+    .badge.ok { background: #d1fae5; color: var(--ok); }
+    .badge.off { background: #fee2e2; color: var(--danger); }
+    .badge.soft { background: var(--accent-soft); color: var(--accent); }
+    .muted { color: var(--muted); }
+    .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 12px; }
+    .hidden { display: none !important; }
+    .toast {
+      position: fixed; right: 20px; bottom: 20px; background: #0f172a; color: white;
+      padding: 12px 16px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0,0,0,0.25);
+      opacity: 0; transform: translateY(8px); transition: .2s ease; z-index: 50;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(15,23,42,0.45);
+      display: grid; place-items: center; padding: 20px; z-index: 40;
+    }
+    .modal {
+      width: min(480px, 100%); background: white; border-radius: 16px;
+      padding: 22px; border: 1px solid var(--line);
+    }
+    .modal h3 { margin: 0 0 8px; }
+    .modal p { margin: 0 0 16px; color: var(--muted); }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+    .split { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    .tpl-item {
+      width: 100%; text-align: left; border: 1px solid var(--line); background: white;
+      border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; color: inherit;
+    }
+    .tpl-item.active { border-color: #93c5fd; background: var(--accent-soft); }
+    .raw-key {
+      background: #0b1220; color: #e2e8f0; border-radius: 12px; padding: 14px;
+      font-family: "JetBrains Mono", monospace; font-size: 12px; word-break: break-all;
+    }
+    @media (max-width: 980px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+      .sidebar-foot { width: 100%; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .split { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="logo"><span class="mark"></span>PDF API</div>
+      <button class="nav-btn active" data-view="dashboard">Dashboard</button>
+      <button class="nav-btn" data-view="keys">API Keys</button>
+      <button class="nav-btn" data-view="templates">Templates</button>
+      <button class="nav-btn" data-view="usage">Usage</button>
+      <button class="nav-btn" data-view="settings">Settings</button>
+      <div class="sidebar-foot">
+        <div id="adminEmail">—</div>
+        <button id="logoutBtn" type="button">Sign out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section id="view-dashboard">
+        <div class="topbar">
+          <div>
+            <h1>Dashboard</h1>
+            <p>Overview of your PDF generation API</p>
+          </div>
+          <button class="secondary" id="refreshDashboard">Refresh</button>
+        </div>
+        <div class="grid stats" id="statsGrid"></div>
+        <div class="card" style="margin-top:16px">
+          <div class="row" style="margin-bottom:8px">
+            <strong>Recent generations</strong>
+          </div>
+          <div id="recentTable"></div>
+        </div>
+      </section>
+
+      <section id="view-keys" class="hidden">
+        <div class="topbar">
+          <div>
+            <h1>API Keys</h1>
+            <p>Create, revoke, and tune per-key quotas</p>
+          </div>
+          <button id="createKeyBtn">Create key</button>
+        </div>
+        <div class="card" id="keysTable"></div>
+      </section>
+
+      <section id="view-templates" class="hidden">
+        <div class="topbar">
+          <div>
+            <h1>Templates</h1>
+            <p>Edit built-in HTML templates used by the API</p>
+          </div>
+        </div>
+        <div class="split">
+          <div id="templateList"></div>
+          <div class="card">
+            <div class="row" style="margin-bottom:12px">
+              <div>
+                <strong id="tplTitle">Select a template</strong>
+                <div class="muted" id="tplMeta"></div>
+              </div>
+              <div class="spacer"></div>
+              <button class="secondary" id="resetTplBtn" disabled>Reset</button>
+              <button id="saveTplBtn" disabled>Save</button>
+            </div>
+            <div class="field">
+              <label>Name</label>
+              <input id="tplName" disabled />
+            </div>
+            <div class="field">
+              <label>Description</label>
+              <input id="tplDesc" disabled />
+            </div>
+            <div class="field">
+              <label>HTML</label>
+              <textarea id="tplHtml" disabled placeholder="Select a template to edit…"></textarea>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-usage" class="hidden">
+        <div class="topbar">
+          <div>
+            <h1>Usage</h1>
+            <p>Per-key quotas and recent PDF generations</p>
+          </div>
+          <select id="usageFilter" style="width:auto;min-width:220px">
+            <option value="">All keys</option>
+          </select>
+        </div>
+        <div class="card" style="margin-bottom:16px" id="usageKeys"></div>
+        <div class="card" id="usageGenerations"></div>
+      </section>
+
+      <section id="view-settings" class="hidden">
+        <div class="topbar">
+          <div>
+            <h1>Settings</h1>
+            <p>Defaults and admin account security</p>
+          </div>
+        </div>
+        <div class="grid" style="grid-template-columns:1fr 1fr">
+          <div class="card">
+            <strong>Platform defaults</strong>
+            <p class="muted" style="margin:8px 0 16px">Applied to newly created API keys</p>
+            <div class="field">
+              <label>Default monthly limit</label>
+              <input id="settingLimit" type="number" min="1" />
+            </div>
+            <div class="field">
+              <label>Signed URL TTL (seconds)</label>
+              <input id="settingTtl" type="number" min="60" />
+            </div>
+            <div class="muted" id="settingMeta" style="margin-bottom:14px"></div>
+            <button id="saveSettingsBtn">Save settings</button>
+          </div>
+          <div class="card">
+            <strong>Change password</strong>
+            <p class="muted" style="margin:8px 0 16px">Keep the admin account secure</p>
+            <div class="field">
+              <label>Current password</label>
+              <input id="currentPassword" type="password" />
+            </div>
+            <div class="field">
+              <label>New password</label>
+              <input id="newPassword" type="password" minlength="8" />
+            </div>
+            <button id="savePasswordBtn">Update password</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="modalRoot"></div>
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      view: "dashboard",
+      me: null,
+      templates: [],
+      activeTemplateId: null,
+      usageKeys: [],
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function toast(message) {
+      const el = $("toast");
+      el.textContent = message;
+      el.classList.add("show");
+      setTimeout(() => el.classList.remove("show"), 2600);
+    }
+
+    async function api(path, options = {}) {
+      const res = await fetch(path, {
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        },
+        ...options,
+      });
+      const json = await res.json().catch(() => ({}));
+      if (res.status === 401) {
+        window.location.href = "/admin/login";
+        throw new Error("Unauthorized");
+      }
+      if (!res.ok || json.success === false) {
+        throw new Error(json?.error?.message || `Request failed (${res.status})`);
+      }
+      return json.data;
+    }
+
+    function setView(view) {
+      state.view = view;
+      document.querySelectorAll(".nav-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.view === view);
+      });
+      ["dashboard", "keys", "templates", "usage", "settings"].forEach((name) => {
+        $(`view-${name}`).classList.toggle("hidden", name !== view);
+      });
+      if (view === "dashboard") loadDashboard();
+      if (view === "keys") loadKeys();
+      if (view === "templates") loadTemplates();
+      if (view === "usage") loadUsage();
+      if (view === "settings") loadSettings();
+    }
+
+    function fmtBytes(n) {
+      if (n < 1024) return `${n} B`;
+      if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+      return `${(n / (1024 * 1024)).toFixed(2)} MB`;
+    }
+
+    function fmtDate(iso) {
+      if (!iso) return "—";
+      return new Date(iso).toLocaleString();
+    }
+
+    function generationsTable(rows) {
+      if (!rows.length) return `<p class="muted">No generations yet.</p>`;
+      return `<table>
+        <thead><tr><th>When</th><th>Key</th><th>Source</th><th>File</th><th>Size</th></tr></thead>
+        <tbody>
+          ${rows.map((g) => `<tr>
+            <td>${fmtDate(g.createdAt)}</td>
+            <td>${g.apiKey ? `${g.apiKey.name}<div class="mono muted">${g.apiKey.keyPrefix}</div>` : "—"}</td>
+            <td><span class="badge soft">${g.source}</span></td>
+            <td class="mono">${g.filename}</td>
+            <td>${fmtBytes(g.sizeBytes)}</td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+    }
+
+    async function loadDashboard() {
+      const data = await api("/admin/api/stats");
+      $("statsGrid").innerHTML = `
+        <div class="card stat"><div class="label">Total PDFs</div><div class="value">${data.totalPdfs}</div><div class="hint">All time generations</div></div>
+        <div class="card stat"><div class="label">Active keys</div><div class="value">${data.activeKeys}</div><div class="hint">${data.totalKeys} total keys</div></div>
+        <div class="card stat"><div class="label">Usage this month</div><div class="value">${data.usageThisMonth}</div><div class="hint">Resets ${fmtDate(data.resetsAt)}</div></div>
+        <div class="card stat"><div class="label">Default limit</div><div class="value">${data.defaultMonthlyLimit}</div><div class="hint">New key monthly quota</div></div>
+      `;
+      $("recentTable").innerHTML = generationsTable(data.recentGenerations);
+    }
+
+    async function loadKeys() {
+      const data = await api("/admin/api/keys");
+      if (!data.keys.length) {
+        $("keysTable").innerHTML = `<p class="muted">No API keys yet. Create one to get started.</p>`;
+        return;
+      }
+      $("keysTable").innerHTML = `<table>
+        <thead><tr><th>Name</th><th>Prefix</th><th>Usage</th><th>Status</th><th>Last used</th><th></th></tr></thead>
+        <tbody>
+          ${data.keys.map((k) => `<tr>
+            <td><strong>${escapeHtml(k.name)}</strong><div class="muted">${k.totalGenerations} total PDFs</div></td>
+            <td class="mono">${k.keyPrefix}</td>
+            <td>${k.usedThisMonth} / ${k.monthlyLimit}<div class="muted">${k.remaining} left</div></td>
+            <td>${k.isActive ? `<span class="badge ok">Active</span>` : `<span class="badge off">Revoked</span>`}</td>
+            <td>${fmtDate(k.lastUsedAt)}</td>
+            <td class="row">
+              <button class="secondary" data-edit-key="${k.id}" data-name="${escapeAttr(k.name)}" data-limit="${k.monthlyLimit}" data-active="${k.isActive}">Edit</button>
+              ${k.isActive ? `<button class="secondary" data-revoke-key="${k.id}">Revoke</button>` : ""}
+              <button class="danger" data-delete-key="${k.id}">Delete</button>
+            </td>
+          </tr>`).join("")}
+        </tbody>
+      </table>`;
+    }
+
+    async function loadTemplates() {
+      state.templates = (await api("/admin/api/templates")).templates;
+      $("templateList").innerHTML = state.templates.map((t) => `
+        <button class="tpl-item ${state.activeTemplateId === t.id ? "active" : ""}" data-tpl="${t.id}">
+          <strong>${escapeHtml(t.name)}</strong>
+          <div class="muted" style="margin-top:4px">${escapeHtml(t.description)}</div>
+          <div style="margin-top:8px">${t.customized ? `<span class="badge soft">Customized</span>` : `<span class="badge ok">Default</span>`}</div>
+        </button>
+      `).join("");
+    }
+
+    async function openTemplate(id) {
+      state.activeTemplateId = id;
+      const tpl = await api(`/admin/api/templates/${id}`);
+      $("tplTitle").textContent = tpl.name;
+      $("tplMeta").textContent = tpl.customized ? `Customized · updated ${fmtDate(tpl.updatedAt)}` : "Using built-in default file";
+      $("tplName").value = tpl.name;
+      $("tplDesc").value = tpl.description;
+      $("tplHtml").value = tpl.html;
+      ["tplName", "tplDesc", "tplHtml", "saveTplBtn", "resetTplBtn"].forEach((id) => {
+        $(id).disabled = false;
+      });
+      await loadTemplates();
+    }
+
+    async function loadUsage() {
+      const filter = $("usageFilter").value;
+      const qs = filter ? `?apiKeyId=${encodeURIComponent(filter)}` : "";
+      const data = await api(`/admin/api/usage${qs}`);
+      state.usageKeys = data.keys;
+      const current = $("usageFilter").value;
+      $("usageFilter").innerHTML = `<option value="">All keys</option>` + data.keys.map((k) =>
+        `<option value="${k.id}" ${current === k.id ? "selected" : ""}>${escapeHtml(k.name)} (${k.keyPrefix})</option>`
+      ).join("");
+      $("usageKeys").innerHTML = `<table>
+        <thead><tr><th>Key</th><th>This month</th><th>Limit</th><th>Remaining</th><th>Status</th></tr></thead>
+        <tbody>${data.keys.map((k) => `<tr>
+          <td><strong>${escapeHtml(k.name)}</strong><div class="mono muted">${k.keyPrefix}</div></td>
+          <td>${k.usedThisMonth}</td><td>${k.monthlyLimit}</td><td>${k.remaining}</td>
+          <td>${k.isActive ? `<span class="badge ok">Active</span>` : `<span class="badge off">Revoked</span>`}</td>
+        </tr>`).join("")}</tbody></table>`;
+      $("usageGenerations").innerHTML = generationsTable(data.generations);
+    }
+
+    async function loadSettings() {
+      const data = await api("/admin/api/settings");
+      $("settingLimit").value = data.defaultMonthlyLimit;
+      $("settingTtl").value = data.signedUrlTtlSeconds;
+      $("settingMeta").textContent = `Env: ${data.nodeEnv} · Public URL: ${data.publicBaseUrl} · Updated ${fmtDate(data.updatedAt)}`;
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;");
+    }
+    function escapeAttr(str) {
+      return escapeHtml(str).replaceAll("'", "&#39;");
+    }
+
+    function openModal({ title, body, confirmText = "Save", onConfirm }) {
+      const root = $("modalRoot");
+      root.innerHTML = `<div class="modal-backdrop"><div class="modal">
+        <h3>${title}</h3>
+        <div>${body}</div>
+        <div class="row" style="margin-top:16px;justify-content:flex-end">
+          <button class="secondary" id="modalCancel">Cancel</button>
+          <button id="modalConfirm">${confirmText}</button>
+        </div>
+      </div></div>`;
+      $("modalCancel").onclick = () => { root.innerHTML = ""; };
+      $("modalConfirm").onclick = async () => {
+        try {
+          await onConfirm();
+          root.innerHTML = "";
+        } catch (err) {
+          toast(err.message);
+        }
+      };
+    }
+
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => setView(btn.dataset.view));
+    });
+
+    $("logoutBtn").onclick = async () => {
+      await api("/admin/api/logout", { method: "POST" });
+      window.location.href = "/admin/login";
+    };
+    $("refreshDashboard").onclick = () => loadDashboard();
+    $("createKeyBtn").onclick = () => {
+      openModal({
+        title: "Create API key",
+        confirmText: "Create",
+        body: `
+          <div class="field"><label>Name</label><input id="newKeyName" placeholder="Production key" /></div>
+          <div class="field"><label>Monthly limit</label><input id="newKeyLimit" type="number" min="1" placeholder="Uses default if empty" /></div>
+        `,
+        onConfirm: async () => {
+          const name = $("newKeyName").value.trim();
+          const limitRaw = $("newKeyLimit").value;
+          if (!name) throw new Error("Name is required");
+          const payload = { name };
+          if (limitRaw) payload.monthlyLimit = Number(limitRaw);
+          const created = await api("/admin/api/keys", {
+            method: "POST",
+            body: JSON.stringify(payload),
+          });
+          openModal({
+            title: "API key created",
+            confirmText: "Done",
+            body: `<p>Copy this key now. It will not be shown again.</p><div class="raw-key">${created.rawKey}</div>`,
+            onConfirm: async () => { await loadKeys(); },
+          });
+          toast("API key created");
+        },
+      });
+    };
+
+    $("keysTable").addEventListener("click", async (e) => {
+      const edit = e.target.closest("[data-edit-key]");
+      const revoke = e.target.closest("[data-revoke-key]");
+      const del = e.target.closest("[data-delete-key]");
+      if (edit) {
+        openModal({
+          title: "Edit API key",
+          body: `
+            <div class="field"><label>Name</label><input id="editKeyName" value="${edit.dataset.name}" /></div>
+            <div class="field"><label>Monthly limit</label><input id="editKeyLimit" type="number" min="1" value="${edit.dataset.limit}" /></div>
+            <div class="field"><label>Status</label>
+              <select id="editKeyActive">
+                <option value="true" ${edit.dataset.active === "true" ? "selected" : ""}>Active</option>
+                <option value="false" ${edit.dataset.active === "false" ? "selected" : ""}>Revoked</option>
+              </select>
+            </div>`,
+          onConfirm: async () => {
+            await api(`/admin/api/keys/${edit.dataset.editKey}`, {
+              method: "PATCH",
+              body: JSON.stringify({
+                name: $("editKeyName").value.trim(),
+                monthlyLimit: Number($("editKeyLimit").value),
+                isActive: $("editKeyActive").value === "true",
+              }),
+            });
+            toast("Key updated");
+            await loadKeys();
+          },
+        });
+      }
+      if (revoke) {
+        if (!confirm("Revoke this API key?")) return;
+        await api(`/admin/api/keys/${revoke.dataset.revokeKey}/revoke`, { method: "POST" });
+        toast("Key revoked");
+        await loadKeys();
+      }
+      if (del) {
+        if (!confirm("Permanently delete this API key and its usage records?")) return;
+        await api(`/admin/api/keys/${del.dataset.deleteKey}`, { method: "DELETE" });
+        toast("Key deleted");
+        await loadKeys();
+      }
+    });
+
+    $("templateList").addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-tpl]");
+      if (btn) openTemplate(btn.dataset.tpl);
+    });
+
+    $("saveTplBtn").onclick = async () => {
+      if (!state.activeTemplateId) return;
+      await api(`/admin/api/templates/${state.activeTemplateId}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          html: $("tplHtml").value,
+          name: $("tplName").value.trim(),
+          description: $("tplDesc").value.trim(),
+        }),
+      });
+      toast("Template saved");
+      await openTemplate(state.activeTemplateId);
+    };
+
+    $("resetTplBtn").onclick = async () => {
+      if (!state.activeTemplateId) return;
+      if (!confirm("Reset this template to the built-in default?")) return;
+      await api(`/admin/api/templates/${state.activeTemplateId}/reset`, { method: "POST" });
+      toast("Template reset");
+      await openTemplate(state.activeTemplateId);
+    };
+
+    $("usageFilter").onchange = () => loadUsage();
+
+    $("saveSettingsBtn").onclick = async () => {
+      await api("/admin/api/settings", {
+        method: "PUT",
+        body: JSON.stringify({
+          defaultMonthlyLimit: Number($("settingLimit").value),
+          signedUrlTtlSeconds: Number($("settingTtl").value),
+        }),
+      });
+      toast("Settings saved");
+      await loadSettings();
+    };
+
+    $("savePasswordBtn").onclick = async () => {
+      await api("/admin/api/password", {
+        method: "POST",
+        body: JSON.stringify({
+          currentPassword: $("currentPassword").value,
+          newPassword: $("newPassword").value,
+        }),
+      });
+      $("currentPassword").value = "";
+      $("newPassword").value = "";
+      toast("Password updated");
+    };
+
+    (async function init() {
+      try {
+        state.me = await api("/admin/api/me");
+        $("adminEmail").textContent = state.me.email;
+        setView("dashboard");
+      } catch {
+        window.location.href = "/admin/login";
+      }
+    })();
+  </script>
+</body>
+</html>

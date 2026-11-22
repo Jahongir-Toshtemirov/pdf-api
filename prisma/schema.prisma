@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Used by Prisma Migrate / introspect. Keep this on Supabase's direct
+  // connection (port 5432). DATABASE_URL may point at the pooler (6543).
+  directUrl = env("DIRECT_URL")
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String   @default("Admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  lastLoginAt  DateTime?
+
+  @@map("admin_users")
+}
+
+model AppSettings {
+  id                   Int      @id @default(1)
+  defaultMonthlyLimit  Int      @default(100)
+  signedUrlTtlSeconds  Int      @default(3600)
+  updatedAt            DateTime @updatedAt
+
+  @@map("app_settings")
+}
+
+model ApiKey {
+  id           String          @id @default(cuid())
+  name         String
+  keyPrefix    String
+  keyHash      String          @unique
+  isActive     Boolean         @default(true)
+  monthlyLimit Int             @default(100)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  lastUsedAt   DateTime?
+  usageRecords UsageRecord[]
+  generations  PdfGeneration[]
+
+  @@index([keyPrefix])
+  @@map("api_keys")
+}
+
+model UsageRecord {
+  id        String   @id @default(cuid())
+  apiKeyId  String
+  apiKey    ApiKey   @relation(fields: [apiKeyId], references: [id], onDelete: Cascade)
+  yearMonth String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([apiKeyId, yearMonth])
+  @@index([apiKeyId, yearMonth])
+  @@map("usage_records")
+}
+
+model PdfArtifact {
+  id        String   @id @default(cuid())
+  filename  String
+  sizeBytes Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("pdf_artifacts")
+}
+
+model PdfGeneration {
+  id         String   @id @default(cuid())
+  apiKeyId   String?
+  apiKey     ApiKey?  @relation(fields: [apiKeyId], references: [id], onDelete: SetNull)
+  source     String
+  filename   String
+  sizeBytes  Int
+  delivery   String   @default("binary")
+  requestId  String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([apiKeyId, createdAt])
+  @@map("pdf_generations")
+}
+
+model StoredTemplate {
+  id          String   @id
+  name        String
+  description String
+  html        String
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("stored_templates")
+}

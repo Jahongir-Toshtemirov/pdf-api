@@ -1,0 +1,23 @@
+# Optional: run only the API container locally.
+# Database is Supabase — set DATABASE_URL / DIRECT_URL in .env (see .env.example).
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOST: 0.0.0.0
+      PUBLIC_BASE_URL: http://localhost:3000
+    volumes:
+      - pdfapi_storage:/app/storage
+
+volumes:
+  pdfapi_storage:

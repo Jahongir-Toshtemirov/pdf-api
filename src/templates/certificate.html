@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}} — {{recipient}}</title>
+  <style>
+    :root {
+      --ink: #1c1917;
+      --muted: #78716c;
+      --gold: #a16207;
+      --line: #d6d3d1;
+      --cream: #fafaf9;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #fff;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+    }
+    .frame {
+      border: 2px solid var(--ink);
+      padding: 10px;
+      min-height: 680px;
+    }
+    .inner {
+      border: 1px solid var(--gold);
+      min-height: 660px;
+      padding: 48px 56px;
+      text-align: center;
+      background:
+        linear-gradient(180deg, #fff 0%, var(--cream) 100%);
+    }
+    .ornament {
+      width: 72px;
+      height: 2px;
+      background: var(--gold);
+      margin: 0 auto 24px;
+    }
+    .eyebrow {
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 18px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 36px;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+    }
+    .subtitle {
+      margin: 0 0 28px;
+      color: var(--muted);
+      font-style: italic;
+      font-size: 15px;
+    }
+    .recipient {
+      margin: 0 0 10px;
+      font-size: 34px;
+      letter-spacing: -0.03em;
+      border-bottom: 1px solid var(--line);
+      display: inline-block;
+      padding: 0 24px 8px;
+    }
+    .course-label {
+      margin: 28px 0 8px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .course {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    .meta {
+      margin-top: 36px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .meta strong { color: var(--ink); }
+    .signers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      margin-top: 64px;
+      text-align: center;
+    }
+    .signer .line {
+      border-top: 1px solid var(--ink);
+      margin: 0 auto 10px;
+      width: 180px;
+    }
+    .signer .name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .signer .title {
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .issued {
+      margin-top: 40px;
+      font-family: "Segoe UI", Arial, sans-serif;
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+    }
+  </style>
+</head>
+<body>
+  <div class="frame">
+    <div class="inner">
+      <div class="ornament"></div>
+      <div class="eyebrow">{{issuedBy}}</div>
+      <h1>{{title}}</h1>
+      <p class="subtitle">{{subtitle}}</p>
+      <div class="recipient">{{recipient}}</div>
+      <div class="course-label">Has successfully completed</div>
+      <p class="course">{{course}}</p>
+      <div class="meta">
+        Credential ID <strong>{{credentialId}}</strong>
+      </div>
+
+      <div class="signers">
+        <div class="signer">
+          <div class="line"></div>
+          <div class="name">{{signerName}}</div>
+          <div class="title">{{signerTitle}}</div>
+        </div>
+        <div class="signer">
+          <div class="line"></div>
+          <div class="name">{{coSignerName}}</div>
+          <div class="title">{{coSignerTitle}}</div>
+        </div>
+      </div>
+
+      <div class="issued">Issued on {{date}}</div>
+    </div>
+  </div>
+</body>
+</html>

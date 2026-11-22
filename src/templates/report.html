@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>{{title}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #101820;
+      --ink-2: #243447;
+      --muted: #5c6b7a;
+      --line: #dde3ea;
+      --paper: #ffffff;
+      --mist: #f4f7fa;
+      --teal: #0d7377;
+      --teal-soft: #e6f3f3;
+      --good: #0f7a4c;
+      --good-bg: #e8f6ef;
+      --warn: #9a6700;
+    }
+
+    * { box-sizing: border-box; }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--paper);
+    }
+
+    body {
+      font-family: "IBM Plex Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.55;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      padding: 6px 4px 8px;
+    }
+
+    /* Dark masthead — executive authority */
+    .masthead {
+      background: var(--ink);
+      color: #fff;
+      padding: 22px 24px 20px;
+      margin-bottom: 22px;
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 20px;
+      align-items: end;
+    }
+
+    .masthead .eyebrow {
+      margin: 0 0 8px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #7eb8b9;
+    }
+
+    .masthead h1 {
+      margin: 0;
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+    }
+
+    .masthead .subtitle {
+      margin: 8px 0 0;
+      color: #a8b4c0;
+      font-size: 12.5px;
+    }
+
+    .masthead .meta {
+      text-align: right;
+      font-size: 11px;
+      color: #a8b4c0;
+      line-height: 1.7;
+    }
+
+    .masthead .meta strong {
+      display: block;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    /* KPI headlines — inverted pyramid tier 1 */
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .kpi {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      padding: 14px 14px 12px;
+      min-height: 108px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .kpi .label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+    }
+
+    .kpi .value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: auto;
+    }
+
+    .kpi .foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid var(--line);
+    }
+
+    .kpi .change {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--good);
+    }
+
+    .kpi .change.neg {
+      color: var(--warn);
+    }
+
+    .kpi .context {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    /* Mid tier: highlights + composition bars */
+    .mid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+      margin-bottom: 22px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: var(--mist);
+      padding: 16px 18px;
+      min-height: 180px;
+    }
+
+    .panel h2 {
+      margin: 0 0 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-2);
+    }
+
+    .highlights {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 10px;
+      counter-reset: hl;
+    }
+
+    .highlights li {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 10px;
+      align-items: start;
+      font-size: 12px;
+      color: var(--ink-2);
+      line-height: 1.45;
+      counter-increment: hl;
+    }
+
+    .highlights li::before {
+      content: counter(hl);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .bars {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bar-row .bar-meta {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+
+    .bar-row .bar-meta .name {
+      font-weight: 600;
+      color: var(--ink-2);
+    }
+
+    .bar-row .bar-meta .pct {
+      font-weight: 700;
+      color: var(--teal);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .track {
+      height: 8px;
+      background: #e2e8ee;
+      overflow: hidden;
+    }
+
+    .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--teal) 0%, #14919b 100%);
+    }
+
+    /* Narrative sections */
+    .sections {
+      display: grid;
+      gap: 0;
+      border: 1px solid var(--line);
+      margin-bottom: 18px;
+    }
+
+    .section {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .section:last-child {
+      border-bottom: none;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-family: "IBM Plex Serif", Georgia, serif;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+      padding-top: 1px;
+    }
+
+    .section p {
+      margin: 0;
+      color: #3d4f5f;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div>
+        <p class="eyebrow">{{company}}</p>
+        <h1>{{title}}</h1>
+        <p class="subtitle">{{subtitle}}</p>
+      </div>
+      <div class="meta">
+        <strong>{{period}}</strong>
+        Prepared for {{preparedFor}}<br />
+        By {{preparedBy}}
+      </div>
+    </header>
+
+    <section class="kpis">
+      {{#kpis}}
+      <div class="kpi">
+        <div class="label">{{label}}</div>
+        <div class="value">{{value}}</div>
+        <div class="foot">
+          <span class="change">{{change}}</span>
+          <span class="context">{{context}}</span>
+        </div>
+      </div>
+      {{/kpis}}
+    </section>
+
+    <section class="mid">
+      <div class="panel">
+        <h2>Key highlights</h2>
+        <ol class="highlights">
+          {{#highlights}}
+          <li>{{.}}</li>
+          {{/highlights}}
+        </ol>
+      </div>
+      <div class="panel">
+        <h2>Revenue mix</h2>
+        <div class="bars">
+          {{#breakdown}}
+          <div class="bar-row">
+            <div class="bar-meta">
+              <span class="name">{{label}}</span>
+              <span class="pct">{{share}}</span>
+            </div>
+            <div class="track"><div class="fill" style="width: {{width}}%"></div></div>
+          </div>
+          {{/breakdown}}
+        </div>
+      </div>
+    </section>
+
+    <section class="sections">
+      {{#sections}}
+      <div class="section">
+        <h2>{{heading}}</h2>
+        <p>{{body}}</p>
+      </div>
+      {{/sections}}
+    </section>
+
+    <div class="footer">
+      <span>{{footerNote}}</span>
+      <span>{{company}} · {{period}}</span>
+    </div>
+  </div>
+</body>
+</html>

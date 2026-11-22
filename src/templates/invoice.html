@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Invoice {{invoice.number}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,600;8..60,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #141414;
+      --ink-2: #2a2a2a;
+      --muted: #6b6b6b;
+      --line: #e6e6e6;
+      --line-soft: #f0f0f0;
+      --paper: #ffffff;
+      --sand: #f7f5f1;
+      --accent: #0f5c4c;
+      --accent-ink: #0a3d33;
+      --amount: #0f5c4c;
+    }
+
+    * { box-sizing: border-box; }
+
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--paper);
+    }
+
+    body {
+      font-family: "Manrope", "Segoe UI", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      font-size: 11.5px;
+      line-height: 1.5;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .page {
+      padding: 8px 6px 10px;
+      min-height: 100%;
+    }
+
+    /* Top brand bar — editorial, not a card */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 24px;
+      padding-bottom: 22px;
+      border-bottom: 2px solid var(--ink);
+      margin-bottom: 26px;
+    }
+
+    .brand-block .wordmark {
+      margin: 0 0 6px;
+      font-family: "Source Serif 4", Georgia, serif;
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      color: var(--ink);
+    }
+
+    .brand-block .addr {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.65;
+      max-width: 260px;
+    }
+
+    .doc-block {
+      text-align: right;
+    }
+
+    .doc-block .doc-type {
+      margin: 0 0 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .doc-block .doc-number {
+      margin: 0 0 14px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+    }
+
+    .doc-meta {
+      display: grid;
+      gap: 6px;
+      justify-items: end;
+    }
+
+    .doc-meta .row {
+      display: grid;
+      grid-template-columns: auto auto;
+      gap: 18px;
+      font-size: 11px;
+    }
+
+    .doc-meta .k {
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .doc-meta .v {
+      color: var(--ink-2);
+      font-weight: 700;
+      min-width: 120px;
+      text-align: right;
+    }
+
+    /* Amount-due banner — research: make total impossible to miss */
+    .amount-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      background: var(--ink);
+      color: #fff;
+      padding: 18px 22px;
+      margin-bottom: 28px;
+    }
+
+    .amount-banner .label {
+      margin: 0 0 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    .amount-banner .client {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .amount-banner .due {
+      text-align: right;
+    }
+
+    .amount-banner .due-label {
+      margin: 0 0 2px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #9fd9c8;
+    }
+
+    .amount-banner .due-value {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1;
+      color: #fff;
+    }
+
+    /* Parties — typography lanes, no gray cards */
+    .parties {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 28px;
+      margin-bottom: 30px;
+    }
+
+    .party h3 {
+      margin: 0 0 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid var(--line);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .party .name {
+      display: block;
+      margin: 0 0 6px;
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.02em;
+    }
+
+    .party p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    /* Line items table — hairlines, light header, zebra */
+    .table-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+    }
+
+    .table-head h2 {
+      margin: 0;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink);
+    }
+
+    .table-head .count {
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 8px;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 10px 12px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--sand);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    thead th.num,
+    tbody td.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    thead th.qty {
+      width: 56px;
+      text-align: center;
+    }
+
+    thead th.price,
+    thead th.amount {
+      width: 108px;
+    }
+
+    tbody td {
+      padding: 14px 12px;
+      border-bottom: 1px solid var(--line-soft);
+      color: var(--ink-2);
+      vertical-align: middle;
+    }
+
+    tbody tr:nth-child(even) td {
+      background: #fbfaf8;
+    }
+
+    tbody td.desc {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    tbody td.qty {
+      text-align: center;
+      color: var(--muted);
+    }
+
+    tbody td.amount {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    /* Totals */
+    .bottom {
+      display: grid;
+      grid-template-columns: 1.2fr 0.9fr;
+      gap: 36px;
+      margin-top: 22px;
+      align-items: start;
+    }
+
+    .notes h3,
+    .pay h3 {
+      margin: 0 0 8px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .notes p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11.5px;
+      line-height: 1.65;
+      max-width: 340px;
+    }
+
+    .pay .lines {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 0;
+    }
+
+    .pay .lines span {
+      display: block;
+      color: var(--ink-2);
+      font-size: 11.5px;
+    }
+
+    .pay .lines .strong {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .totals {
+      border-top: 2px solid var(--ink);
+      padding-top: 10px;
+    }
+
+    .totals .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 7px 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .totals .row span:last-child {
+      font-weight: 600;
+      color: var(--ink-2);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .totals .row.grand {
+      margin-top: 6px;
+      padding: 12px 0 0;
+      border-top: 1px solid var(--line);
+      color: var(--accent-ink);
+      font-size: 14px;
+      font-weight: 800;
+    }
+
+    .totals .row.grand span:last-child {
+      color: var(--amount);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .page-foot {
+      margin-top: 34px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: 0.02em;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand-block">
+        <p class="wordmark">{{company.name}}</p>
+        <p class="addr">
+          {{company.address}}<br />
+          {{company.city}}<br />
+          {{company.email}} · {{company.phone}}
+        </p>
+      </div>
+      <div class="doc-block">
+        <p class="doc-type">Invoice</p>
+        <p class="doc-number">{{invoice.number}}</p>
+        <div class="doc-meta">
+          <div class="row"><span class="k">Issued</span><span class="v">{{invoice.date}}</span></div>
+          <div class="row"><span class="k">Due date</span><span class="v">{{invoice.dueDate}}</span></div>
+          <div class="row"><span class="k">Status</span><span class="v">{{invoice.status}}</span></div>
+        </div>
+      </div>
+    </header>
+
+    <section class="amount-banner">
+      <div>
+        <p class="label">Billed to</p>
+        <p class="client">{{client.name}}</p>
+      </div>
+      <div class="due">
+        <p class="due-label">Amount due</p>
+        <p class="due-value">{{total}}</p>
+      </div>
+    </section>
+
+    <section class="parties">
+      <div class="party">
+        <h3>Client</h3>
+        <strong class="name">{{client.name}}</strong>
+        <p>{{client.address}}</p>
+        <p>{{client.city}}</p>
+        <p>{{client.email}}</p>
+      </div>
+      <div class="party">
+        <h3>Payment</h3>
+        <strong class="name">{{payment.method}}</strong>
+        <p>{{payment.accountName}}</p>
+        <p>Account {{payment.accountNumber}}</p>
+        <p>Routing {{payment.routing}}</p>
+      </div>
+      <div class="party">
+        <h3>Terms</h3>
+        <strong class="name">Net 30</strong>
+        <p>Please include invoice number on the transfer memo.</p>
+        <p>Late fees may apply after the due date.</p>
+      </div>
+    </section>
+
+    <div class="table-head">
+      <h2>Services</h2>
+      <span class="count">Itemized charges</span>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th class="qty">Qty</th>
+          <th class="num price">Rate</th>
+          <th class="num amount">Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#items}}
+        <tr>
+          <td class="desc">{{description}}</td>
+          <td class="qty">{{quantity}}</td>
+          <td class="num">{{unitPrice}}</td>
+          <td class="num amount">{{amount}}</td>
+        </tr>
+        {{/items}}
+      </tbody>
+    </table>
+
+    <div class="bottom">
+      <div class="notes">
+        <h3>Notes</h3>
+        <p>{{notes}}</p>
+      </div>
+      <div class="totals">
+        <div class="row"><span>Subtotal</span><span>{{subtotal}}</span></div>
+        <div class="row"><span>{{taxLabel}}</span><span>{{tax}}</span></div>
+        <div class="row grand"><span>Total due</span><span>{{total}}</span></div>
+      </div>
+    </div>
+
+    <div class="page-foot">
+      <span>{{company.name}} · {{invoice.number}}</span>
+      <span>Thank you for your business</span>
+    </div>
+  </div>
+</body>
+</html>
